@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"log"
 	"ronin/models"
 
 	"github.com/jmoiron/sqlx"
@@ -87,24 +88,34 @@ func (repo *AthleteRepository) GetAthleteByUsername(username string) (models.Ath
 }
 
 func (repo *AthleteRepository) IsAuthorizedUser(athlete models.Athlete) (bool, models.Athlete, error) {
+	log.Printf("Checking authorization for user: %+v", athlete)
+
 	var athleteId int
 	sqlStmt := `SELECT count(*) FROM athlete where username = $1 and password = $2`
+	log.Printf("Executing SQL: %s with params: username=%s", sqlStmt, athlete.Username)
+
 	err := repo.db.QueryRow(sqlStmt, athlete.Username, athlete.Password).Scan(&athleteId)
 	if err != nil {
+		log.Printf("Error in initial auth check: %v", err)
 		return false, models.Athlete{}, err
 	}
+	log.Printf("Found %d matching users", athleteId)
 
 	if athleteId == 1 {
 		var tempAthlete models.Athlete
 		sqlStmt := `SELECT * FROM athlete where username = $1 and password = $2`
+		log.Printf("Fetching athlete details with SQL: %s", sqlStmt)
+
 		err := repo.db.Get(&tempAthlete, sqlStmt, athlete.Username, athlete.Password)
 		if err != nil {
+			log.Printf("Error fetching athlete details: %v", err)
 			return true, models.Athlete{}, err
 		}
-
+		log.Printf("Successfully retrieved athlete: %+v", tempAthlete)
 		return true, tempAthlete, nil
 	}
 
+	log.Println("No matching user found")
 	return false, models.Athlete{}, nil
 }
 

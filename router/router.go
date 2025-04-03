@@ -1,20 +1,61 @@
 package router
 
 import (
+	"log"
+	"net/http"
+	"time"
+
 	"github.com/gorilla/mux"
 
 	"ronin/services"
 )
 
 const base_url = "/api/v1"
+
 var outcomeService *services.OutcomeService
 
 func SetOutcomeService(s *services.OutcomeService) {
 	outcomeService = s
 }
 
+// LoggingMiddleware logs all incoming requests
+func LoggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		// Log the request
+		log.Printf("Started %s %s", r.Method, r.URL.Path)
+
+		// Create a custom response writer to capture the status code
+		rw := &responseWriter{ResponseWriter: w, statusCode: http.StatusOK}
+
+		// Call the next handler
+		next.ServeHTTP(rw, r)
+
+		// Log the response
+		duration := time.Since(start)
+		log.Printf("Completed %s %s in %v with status %d",
+			r.Method, r.URL.Path, duration, rw.statusCode)
+	})
+}
+
+// Custom response writer to capture status code
+type responseWriter struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (rw *responseWriter) WriteHeader(code int) {
+	rw.statusCode = code
+	rw.ResponseWriter.WriteHeader(code)
+}
+
 func CreateRouter() *mux.Router {
 	router := mux.NewRouter()
+
+	// Apply logging middleware to all routes
+	router.Use(LoggingMiddleware)
+
 	router.HandleFunc(base_url+"/athletes", services.GetAllAthletes).Methods("GET")
 	router.HandleFunc(base_url+"/athlete/{athlete_id}", services.GetAthlete).Methods("GET")
 	router.HandleFunc(base_url+"/athlete", services.CreateAthlete).Methods("POST")
@@ -26,7 +67,6 @@ func CreateRouter() *mux.Router {
 	router.HandleFunc(base_url+"/athletes/follow", services.FollowAthlete).Methods("POST")
 	router.HandleFunc(base_url+"/athletes/{followerId}/{followedId}/unfollow", services.UnfollowAthlete).Methods("DELETE")
 	router.HandleFunc(base_url+"/athletes/following/{athlete_id}", services.GetAthletesFollowed).Methods("GET")
-
 
 	router.HandleFunc(base_url+"/bouts", services.GetAllBouts).Methods("GET")
 	router.HandleFunc(base_url+"/bout/{bout_id}", services.GetBout).Methods("GET")
