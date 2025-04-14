@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"fmt"
 	"ronin/models"
 
 	"github.com/jmoiron/sqlx"
@@ -54,14 +55,14 @@ func (fr *FeedRepository) GetFeedByAthleteId(id string) ([]models.Feed, error) {
 		o.winner_id AS "winnerId",
 		o.loser_id AS "loserId",
 		b.updated_dt AS "updatedDt",
-		ww.wins AS "winnerWins",
-		ww.losses AS "winnerLosses",
-		ww.draws AS "winnerDraws",
-		ll.wins AS "loserWins",
-		ll.losses AS "loserLosses",
-		ll.draws AS "loserDraws",
-		ws.score AS "winnerScore",
-		ls.score AS "loserScore"
+		COALESCE(ww.wins, 0) AS "winnerWins",
+		COALESCE(ww.losses, 0) AS "winnerLosses",
+		COALESCE(ww.draws, 0) AS "winnerDraws",
+		COALESCE(ll.wins, 0) AS "loserWins",
+		COALESCE(ll.losses, 0) AS "loserLosses",
+		COALESCE(ll.draws, 0) AS "loserDraws",
+		COALESCE(ws.score, 0) AS "winnerScore",
+		COALESCE(ls.score, 0) AS "loserScore"
 	FROM
 		bout b
 	JOIN
@@ -70,11 +71,11 @@ func (fr *FeedRepository) GetFeedByAthleteId(id string) ([]models.Feed, error) {
 		athlete c ON b.challenger_id = c.athlete_id
 	JOIN
 		athlete a ON b.acceptor_id = a.athlete_id
-	LEFT JOIN
+	JOIN
 		outcome o ON b.bout_id = o.bout_id
-	LEFT JOIN
+	JOIN
 		athlete w ON o.winner_id = w.athlete_id
-	LEFT JOIN
+	JOIN
 		athlete l ON o.loser_id = l.athlete_id
 	JOIN
 		athlete r ON b.referee_id = r.athlete_id
@@ -88,7 +89,7 @@ func (fr *FeedRepository) GetFeedByAthleteId(id string) ([]models.Feed, error) {
 		latest_scores ws ON o.winner_id = ws.athlete_id AND ws.style_id = b.style_id AND ws.row_num = 1
 	LEFT JOIN
 		latest_scores ls ON o.loser_id = ls.athlete_id AND ls.style_id = b.style_id AND ls.row_num = 1
-	WHERE b.cancelled != true and ((accepted = false and completed = false) OR (b.completed = true and b.accepted = true))
+	WHERE b.cancelled != true AND b.completed = true AND b.accepted = true
 	ORDER BY b.updated_dt DESC;`
 
 	rows, err := fr.DB.Queryx(sqlStmt, id)
@@ -97,11 +98,28 @@ func (fr *FeedRepository) GetFeedByAthleteId(id string) ([]models.Feed, error) {
 	}
 	defer rows.Close()
 
-	var tempFeed = models.GetFeed()
+	feed = []models.Feed{} // Initialize as empty slice instead of nil
+	var tempFeed models.Feed
+
 	for rows.Next() {
 		err = rows.StructScan(&tempFeed)
+		if err != nil {
+			// Log the error but continue with other rows
+			fmt.Printf("Error scanning row: %v\n", err)
+			continue
+		}
 		feed = append(feed, tempFeed)
 	}
 
-	return feed, err
+	// Check for errors after iterating through rows
+	if err = rows.Err(); err != nil {
+		return feed, err
+	}
+
+	// If we got no results, still return an empty slice instead of nil
+	if len(feed) == 0 {
+		return []models.Feed{}, nil
+	}
+
+	return feed, nil
 }
