@@ -88,11 +88,10 @@ func (repo *AthleteRepository) GetAthleteByUsername(username string) (models.Ath
 }
 
 func (repo *AthleteRepository) IsAuthorizedUser(athlete models.Athlete) (bool, models.Athlete, error) {
-	log.Printf("Checking authorization for user: %+v", athlete)
+	log.Printf("Checking authorization for user: %s", athlete.Username)
 
 	var athleteId int
 	sqlStmt := `SELECT count(*) FROM athlete where username = $1 and password = $2`
-	log.Printf("Executing SQL: %s with params: username=%s", sqlStmt, athlete.Username)
 
 	err := repo.db.QueryRow(sqlStmt, athlete.Username, athlete.Password).Scan(&athleteId)
 	if err != nil {
@@ -104,14 +103,14 @@ func (repo *AthleteRepository) IsAuthorizedUser(athlete models.Athlete) (bool, m
 	if athleteId == 1 {
 		var tempAthlete models.Athlete
 		sqlStmt := `SELECT * FROM athlete where username = $1 and password = $2`
-		log.Printf("Fetching athlete details with SQL: %s", sqlStmt)
+		log.Printf("Fetching athlete details for username: %s", athlete.Username)
 
 		err := repo.db.Get(&tempAthlete, sqlStmt, athlete.Username, athlete.Password)
 		if err != nil {
 			log.Printf("Error fetching athlete details: %v", err)
 			return true, models.Athlete{}, err
 		}
-		log.Printf("Successfully retrieved athlete: %+v", tempAthlete)
+		log.Printf("Successfully retrieved athlete with ID: %d", tempAthlete.AthleteId)
 		return true, tempAthlete, nil
 	}
 

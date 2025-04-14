@@ -93,7 +93,6 @@ func IsAuthorizedUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Printf("Decoded athlete data: %+v", athlete)
 
 	isAuthorized, returnedAthlete, err := athleteRepo.IsAuthorizedUser(athlete)
 	if err != nil {
@@ -101,7 +100,6 @@ func IsAuthorizedUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Printf("Authorization result - isAuthorized: %v, athlete: %+v", isAuthorized, returnedAthlete)
 
 	if !isAuthorized {
 		log.Println("User not authorized")

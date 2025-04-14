@@ -47,6 +47,7 @@ func (repo *AthleteScoreRepository) GetAthleteStyleScoresById(id string) ([]mode
 	JOIN (
 		SELECT athlete_id, style_id, MAX(updated_dt) AS max_updated_dt
 		FROM athlete_score
+		WHERE athlete_id = $1
 		GROUP BY athlete_id, style_id
 	) AS max_dt ON max_dt.athlete_id = a.athlete_id AND max_dt.style_id = a.style_id AND max_dt.max_updated_dt = a.updated_dt
 	WHERE a.athlete_id = $1`
@@ -55,18 +56,23 @@ func (repo *AthleteScoreRepository) GetAthleteStyleScoresById(id string) ([]mode
 		return nil, err
 	}
 	return athleteScores, nil
-
 }
 
 func (repo *AthleteScoreRepository) GetAllAthleteScoresByAthleteId(id string) ([]models.AthleteScore, error) {
 	var athleteScores []models.AthleteScore
-
-	sqlStmt := `SELECT * FROM athlete_score where athlete_id = $1`
-	err := repo.DB.QueryRowx(sqlStmt, id).StructScan(&athleteScores)
+	sqlStmt := `SELECT 
+		athlete_id,
+		style_id,
+		COALESCE(outcome_id, 0) as outcome_id,
+		score,
+		created_dt,
+		updated_dt
+	FROM athlete_score 
+	WHERE athlete_id = $1`
+	err := repo.DB.Select(&athleteScores, sqlStmt, id)
 	if err != nil {
 		return nil, err
 	}
-
 	return athleteScores, nil
 }
 

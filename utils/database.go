@@ -25,18 +25,6 @@ func GetConnection() *sqlx.DB {
 	dbPassword := os.Getenv("DB_PASSWORD")
 	dbName := os.Getenv("DB_NAME")
 
-	// Debug: Print all environment variables
-	log.Printf("Environment variables loaded:")
-	log.Printf("  DB_HOST: %s", dbHost)
-	log.Printf("  DB_PORT: %s", dbPort)
-	log.Printf("  DB_USER: %s", dbUser)
-	log.Printf("  DB_NAME: %s", dbName)
-	if dbPassword == "" {
-		log.Printf("  DB_PASSWORD: (empty)")
-	} else {
-		log.Printf("  DB_PASSWORD: (set)")
-	}
-
 	// Validate required environment variables
 	if dbHost == "" || dbPort == "" || dbUser == "" || dbName == "" {
 		log.Fatal("Missing required database configuration in .env file")
@@ -51,10 +39,6 @@ func GetConnection() *sqlx.DB {
 	// Construct connection string with explicit database name and additional parameters
 	psqlInfo := fmt.Sprintf("postgres://%s:%s@%s:%d/%s?sslmode=disable",
 		dbUser, dbPassword, dbHost, port, dbName)
-
-	// Log the exact connection string being used (without password)
-	log.Printf("Using connection string: postgres://%s:****@%s:%d/%s?sslmode=disable",
-		dbUser, dbHost, port, dbName)
 
 	// Open database connection
 	db, err := sqlx.Open("postgres", psqlInfo)
