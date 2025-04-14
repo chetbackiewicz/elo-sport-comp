@@ -204,12 +204,12 @@ func FollowAthlete(w http.ResponseWriter, r *http.Request) {
 func UnfollowAthlete(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	vars := mux.Vars(r)
-	followerId, err := strconv.Atoi(vars["follower_id"])
+	followerId, err := strconv.Atoi(vars["followerId"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	followedId, err := strconv.Atoi(vars["followed_id"])
+	followedId, err := strconv.Atoi(vars["followedId"])
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
