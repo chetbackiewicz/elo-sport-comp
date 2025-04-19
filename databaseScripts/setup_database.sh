@@ -31,19 +31,17 @@ echo "Database setup complete!"
 
 # Verify the setup by showing some basic stats
 echo -e "\nDatabase Statistics:"
-psql -d elo_sport << EOF
-\echo '\nNumber of athletes:'
-SELECT COUNT(*) FROM athlete;
-\echo '\nNumber of bouts:'
-SELECT COUNT(*) FROM bout;
-\echo '\nNumber of completed bouts:'
-SELECT COUNT(*) FROM bout WHERE completed = true;
-\echo '\nNumber of pending bouts:'
-SELECT COUNT(*) FROM bout WHERE completed = false;
-\echo '\nAthletes and their scores:'
-SELECT a.username, s.style_name, as2.score 
+psql -d elo_sport -c "\echo '\nNumber of athletes:'"
+psql -d elo_sport -c "SELECT COUNT(*) FROM athlete;"
+psql -d elo_sport -c "\echo '\nNumber of bouts:'"
+psql -d elo_sport -c "SELECT COUNT(*) FROM bout;"
+psql -d elo_sport -c "\echo '\nNumber of completed bouts:'"
+psql -d elo_sport -c "SELECT COUNT(*) FROM bout WHERE completed = true;"
+psql -d elo_sport -c "\echo '\nNumber of pending bouts:'"
+psql -d elo_sport -c "SELECT COUNT(*) FROM bout WHERE completed = false;"
+psql -d elo_sport -c "\echo '\nAthletes and their scores:'"
+psql -d elo_sport -c "SELECT a.username, s.style_name, as2.score 
 FROM athlete_score as2 
 JOIN athlete a ON a.athlete_id = as2.athlete_id 
 JOIN style s ON s.style_id = as2.style_id 
-ORDER BY a.username, s.style_name;
-EOF 
+ORDER BY a.username, s.style_name;" 
