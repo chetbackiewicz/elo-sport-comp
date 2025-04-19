@@ -169,25 +169,3 @@ func (repo *AthleteScoreRepository) CreateAthleteScoreUponRegistration(athleteId
 
 	return tx.Commit()
 }
-
-func (repo *AthleteScoreRepository) GetAthleteScoreHistory(athleteId int, styleId int) ([]models.AthleteScoreHistory, error) {
-	var history []models.AthleteScoreHistory
-	sqlStmt := `SELECT 
-		history_id,
-		athlete_id,
-		style_id,
-		outcome_id,
-		previous_score,
-		new_score,
-		created_dt,
-		updated_dt
-	FROM athlete_score_history 
-	WHERE athlete_id = $1 AND style_id = $2 
-	ORDER BY created_dt ASC`
-
-	err := repo.DB.Select(&history, sqlStmt, athleteId, styleId)
-	if err != nil {
-		return nil, err
-	}
-	return history, nil
-}
