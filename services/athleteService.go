@@ -413,6 +413,8 @@ func GetAthletesFollowed(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["athlete_id"]
 
+	fmt.Println("Getting athletes followed by: ", id)
+
 	follows, err := athleteRepo.GetAthletesFollowed(id)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)

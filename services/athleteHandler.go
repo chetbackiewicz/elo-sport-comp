@@ -32,7 +32,7 @@ func (h *AthleteHandler) GetAllAthletes(w http.ResponseWriter, r *http.Request) 
 
 func (h *AthleteHandler) GetAthlete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := vars["athlete_id"]
 
 	athlete, err := h.service.GetByID(id)
 	if err != nil {
@@ -97,13 +97,14 @@ func (h *AthleteHandler) DeleteAthlete(w http.ResponseWriter, r *http.Request) {
 
 func (h *AthleteHandler) GetAthleteRecord(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
-	id := vars["id"]
+	id := vars["athlete_id"]
 
 	record, err := h.service.GetRecord(id)
 	if err != nil {
 		SendError(w, err.Error(), http.StatusBadRequest)
 		return
 	}
+
 	SendJSON(w, record)
 }
 
@@ -181,4 +182,23 @@ func (h *AthleteHandler) UnfollowAthlete(w http.ResponseWriter, r *http.Request)
 	}
 
 	SendJSON(w, map[string]string{"message": "Athlete unfollowed successfully"})
+}
+
+func (h *AthleteHandler) GetAthletesFollowed(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	follows, err := h.service.GetAthletesFollowed(id)
+	if err != nil {
+		SendError(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	// Extract just the followed IDs
+	followedIds := make([]int, len(follows))
+	for i, follow := range follows {
+		followedIds[i] = follow.FollowedId
+	}
+
+	SendJSON(w, followedIds)
 }

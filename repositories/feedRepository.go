@@ -66,8 +66,6 @@ func (fr *FeedRepository) GetFeedByAthleteId(id string) ([]models.Feed, error) {
 	FROM
 		bout b
 	JOIN
-		athlete_following af ON b.challenger_id = af.followed_id OR b.acceptor_id = af.followed_id
-	JOIN
 		athlete c ON b.challenger_id = c.athlete_id
 	JOIN
 		athlete a ON b.acceptor_id = a.athlete_id
@@ -89,7 +87,18 @@ func (fr *FeedRepository) GetFeedByAthleteId(id string) ([]models.Feed, error) {
 		latest_scores ws ON o.winner_id = ws.athlete_id AND ws.style_id = b.style_id AND ws.row_num = 1
 	LEFT JOIN
 		latest_scores ls ON o.loser_id = ls.athlete_id AND ls.style_id = b.style_id AND ls.row_num = 1
-	WHERE b.cancelled != true AND b.completed = true AND b.accepted = true
+	WHERE 
+		b.cancelled != true 
+		AND b.completed = true 
+		AND b.accepted = true
+		AND (
+			-- Include bouts where the user is a participant
+			b.challenger_id = $1 
+			OR b.acceptor_id = $1
+			-- Include bouts where someone they follow is a participant
+			OR (b.challenger_id IN (SELECT followed_id FROM athlete_following)
+				OR b.acceptor_id IN (SELECT followed_id FROM athlete_following))
+		)
 	ORDER BY b.updated_dt DESC;`
 
 	rows, err := fr.DB.Queryx(sqlStmt, id)
