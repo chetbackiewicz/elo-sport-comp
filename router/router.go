@@ -12,10 +12,42 @@ import (
 
 const base_url = "/api/v1"
 
-var outcomeService *services.OutcomeService
+var (
+	outcomeHandler      *services.OutcomeHandler
+	athleteHandler      *services.AthleteHandler
+	athleteScoreHandler *services.AthleteScoreHandler
+	boutHandler         *services.BoutHandler
+	feedHandler         *services.FeedHandler
+	gymHandler          *services.GymHandler
+	styleHandler        *services.StyleHandler
+)
 
-func SetOutcomeService(s *services.OutcomeService) {
-	outcomeService = s
+func SetOutcomeHandler(h *services.OutcomeHandler) {
+	outcomeHandler = h
+}
+
+func SetAthleteHandler(h *services.AthleteHandler) {
+	athleteHandler = h
+}
+
+func SetAthleteScoreHandler(h *services.AthleteScoreHandler) {
+	athleteScoreHandler = h
+}
+
+func SetBoutHandler(h *services.BoutHandler) {
+	boutHandler = h
+}
+
+func SetFeedHandler(h *services.FeedHandler) {
+	feedHandler = h
+}
+
+func SetGymHandler(h *services.GymHandler) {
+	gymHandler = h
+}
+
+func SetStyleHandler(h *services.StyleHandler) {
+	styleHandler = h
 }
 
 // LoggingMiddleware logs all incoming requests
@@ -56,52 +88,57 @@ func CreateRouter() *mux.Router {
 	// Apply logging middleware to all routes
 	router.Use(LoggingMiddleware)
 
-	router.HandleFunc(base_url+"/athletes", services.GetAllAthletes).Methods("GET")
-	router.HandleFunc(base_url+"/athlete/{athlete_id}", services.GetAthlete).Methods("GET")
-	router.HandleFunc(base_url+"/athlete", services.CreateAthlete).Methods("POST")
-	router.HandleFunc(base_url+"/athlete/{athlete_id}", services.UpdateAthlete).Methods("PUT")
-	router.HandleFunc(base_url+"/athlete/{athlete_id}", services.DeleteAthlete).Methods("DELETE")
-	router.HandleFunc(base_url+"/athlete/all/usernames", services.GetAllAthleteUsernames).Methods("GET")
-	router.HandleFunc(base_url+"/athlete/{athlete_id}/record", services.GetAthleteRecord).Methods("GET")
-	router.HandleFunc(base_url+"/athlete/authorize", services.IsAuthorizedUser).Methods("POST")
-	router.HandleFunc(base_url+"/athletes/follow", services.FollowAthlete).Methods("POST")
-	router.HandleFunc(base_url+"/athletes/{followerId}/{followedId}/unfollow", services.UnfollowAthlete).Methods("DELETE")
-	router.HandleFunc(base_url+"/athletes/following/{athlete_id}", services.GetAthletesFollowed).Methods("GET")
+	// Athlete routes
+	router.HandleFunc(base_url+"/athletes", athleteHandler.GetAllAthletes).Methods("GET")
+	router.HandleFunc(base_url+"/athlete/{athlete_id}", athleteHandler.GetAthlete).Methods("GET")
+	router.HandleFunc(base_url+"/athlete", athleteHandler.CreateAthlete).Methods("POST")
+	router.HandleFunc(base_url+"/athlete/{athlete_id}", athleteHandler.UpdateAthlete).Methods("PUT")
+	router.HandleFunc(base_url+"/athlete/{athlete_id}", athleteHandler.DeleteAthlete).Methods("DELETE")
+	router.HandleFunc(base_url+"/athlete/all/usernames", athleteHandler.GetAllAthleteUsernames).Methods("GET")
+	router.HandleFunc(base_url+"/athlete/{athlete_id}/record", athleteHandler.GetAthleteRecord).Methods("GET")
+	router.HandleFunc(base_url+"/athlete/authorize", athleteHandler.IsAuthorizedUser).Methods("POST")
+	router.HandleFunc(base_url+"/athletes/follow", athleteHandler.FollowAthlete).Methods("POST")
+	router.HandleFunc(base_url+"/athletes/{followerId}/{followedId}/unfollow", athleteHandler.UnfollowAthlete).Methods("DELETE")
 
-	router.HandleFunc(base_url+"/bouts", services.GetAllBouts).Methods("GET")
-	router.HandleFunc(base_url+"/bout/{bout_id}", services.GetBout).Methods("GET")
-	router.HandleFunc(base_url+"/bout", services.CreateBout).Methods("POST")
-	router.HandleFunc(base_url+"/bout/{bout_id}", services.UpdateBout).Methods("PUT")
-	router.HandleFunc(base_url+"/bout/{bout_id}", services.DeleteBout).Methods("DELETE")
-	router.HandleFunc(base_url+"/bout/{bout_id}/accept", services.AcceptBout).Methods("PUT")
-	router.HandleFunc(base_url+"/bout/{bout_id}/decline", services.DeclineBout).Methods("PUT")
-	router.HandleFunc(base_url+"/bout/{bout_id}/complete/{referee_id}", services.CompleteBout).Methods("PUT")
-	router.HandleFunc(base_url+"/bouts/pending/{athlete_id}", services.GetPendingBouts).Methods("GET")
-	router.HandleFunc(base_url+"/bouts/incomplete/{athlete_id}", services.GetIncompleteBouts).Methods("GET")
-	router.HandleFunc(base_url+"/bout/cancel/{bout_id}/{challenger_id}", services.CancelBout).Methods("PUT")
+	// Bout routes
+	router.HandleFunc(base_url+"/bouts", boutHandler.GetAllBouts).Methods("GET")
+	router.HandleFunc(base_url+"/bout/{bout_id}", boutHandler.GetBout).Methods("GET")
+	router.HandleFunc(base_url+"/bout", boutHandler.CreateBout).Methods("POST")
+	router.HandleFunc(base_url+"/bout/{bout_id}", boutHandler.UpdateBout).Methods("PUT")
+	router.HandleFunc(base_url+"/bout/{bout_id}", boutHandler.DeleteBout).Methods("DELETE")
+	router.HandleFunc(base_url+"/bout/{bout_id}/accept", boutHandler.AcceptBout).Methods("PUT")
+	router.HandleFunc(base_url+"/bout/{bout_id}/decline", boutHandler.DeclineBout).Methods("PUT")
+	router.HandleFunc(base_url+"/bout/{bout_id}/complete/{referee_id}", boutHandler.CompleteBout).Methods("PUT")
+	router.HandleFunc(base_url+"/bout/cancel/{bout_id}/{challenger_id}", boutHandler.CancelBout).Methods("PUT")
+	router.HandleFunc(base_url+"/bouts/pending/{athlete_id}", boutHandler.GetPendingBouts).Methods("GET")
+	router.HandleFunc(base_url+"/bouts/incomplete/{athlete_id}", boutHandler.GetIncompleteBouts).Methods("GET")
 
-	router.HandleFunc(base_url+"/gyms", services.GetAllGyms).Methods("GET")
-	router.HandleFunc(base_url+"/gym", services.CreateGym).Methods("POST")
-	router.HandleFunc(base_url+"/gym/{gym_id}", services.GetGym).Methods("GET")
+	// Outcome routes
+	router.HandleFunc(base_url+"/outcomes", outcomeHandler.GetAllOutcomes).Methods("GET")
+	router.HandleFunc(base_url+"/outcome/{outcome_id}", outcomeHandler.GetOutcome).Methods("GET")
+	router.HandleFunc(base_url+"/outcome", outcomeHandler.CreateOutcome).Methods("POST")
+	router.HandleFunc(base_url+"/outcome/bout/{bout_id}", outcomeHandler.GetOutcomeByBout).Methods("GET")
+	router.HandleFunc(base_url+"/outcome/bout/{bout_id}", outcomeHandler.CreateOutcomeByBout).Methods("POST")
 
-	outcomeService := services.OutcomeService{}
-	router.HandleFunc(base_url+"/outcome", outcomeService.CreateOutcome).Methods("POST")
-	router.HandleFunc(base_url+"/outcome/{outcome_id}", services.GetOutcome).Methods("GET")
-	router.HandleFunc(base_url+"/outcome/bout/{bout_id}", services.GetOutcomeByBout).Methods("GET")
-	router.HandleFunc(base_url+"/outcome/bout/{bout_id}", outcomeService.CreateOutcomeByBout).Methods("POST")
+	// Style routes
+	router.HandleFunc(base_url+"/styles", styleHandler.GetAllStyles).Methods("GET")
+	router.HandleFunc(base_url+"/style", styleHandler.CreateStyle).Methods("POST")
+	router.HandleFunc(base_url+"/style/athlete/{athlete_id}", styleHandler.RegisterAthleteToStyle).Methods("POST")
+	router.HandleFunc(base_url+"/styles/athlete/{athlete_id}", styleHandler.RegisterMultipleStylesToAthlete).Methods("POST")
+	router.HandleFunc(base_url+"/styles/common/{athlete_id}/{challenger_id}", styleHandler.GetCommonStyles).Methods("GET")
 
-	styleService := services.StyleService{}
-	router.HandleFunc(base_url+"/styles", services.GetAllStyles).Methods("GET")
-	router.HandleFunc(base_url+"/style", services.CreateStyle).Methods("POST")
-	router.HandleFunc(base_url+"/style/athlete/{athlete_id}", styleService.RegisterAthleteToStyle).Methods("POST")
-	router.HandleFunc(base_url+"/styles/athlete/{athlete_id}", styleService.RegisterMultipleStylesToAthlete).Methods("POST")
-	router.HandleFunc(base_url+"/styles/common/{athlete_id}/{challenger_id}", services.GetCommonStyles).Methods("GET")
+	// Athlete Score routes
+	router.HandleFunc(base_url+"/score/{athlete_id}", athleteScoreHandler.GetAthleteScore).Methods("GET")
+	router.HandleFunc(base_url+"/score/{athlete_id}/all", athleteScoreHandler.GetAthleteScore).Methods("GET")
+	router.HandleFunc(base_url+"/score/{athlete_id}/style/{style_id}", athleteScoreHandler.GetAthleteScoreByStyle).Methods("GET")
 
-	router.HandleFunc(base_url+"/score/{athlete_id}", services.GetAthleteScore).Methods("GET")
-	router.HandleFunc(base_url+"/score/{athlete_id}/all", services.GetAllAthleteScoresByAthleteId).Methods("GET")
-	router.HandleFunc(base_url+"/score/{athlete_id}/style/{style_id}", services.GetAthleteScoreByStyle).Methods("GET")
+	// Feed routes
+	router.HandleFunc(base_url+"/feed/{athlete_id}", feedHandler.GetFeedByAthleteID).Methods("GET")
 
-	router.HandleFunc(base_url+"/feed/{athlete_id}", services.GetFeedByAthleteId).Methods("GET")
+	// Gym routes
+	router.HandleFunc(base_url+"/gyms", gymHandler.GetAllGyms).Methods("GET")
+	router.HandleFunc(base_url+"/gym/{gym_id}", gymHandler.GetGym).Methods("GET")
+	router.HandleFunc(base_url+"/gym", gymHandler.CreateGym).Methods("POST")
 
 	return router
 }

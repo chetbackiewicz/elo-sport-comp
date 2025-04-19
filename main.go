@@ -1,42 +1,78 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
+	"ronin/interfaces"
 	"ronin/repositories"
 	"ronin/router"
 	"ronin/services"
 	"ronin/utils"
+
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
 	log.Println("In Main App")
 
+	// Load environment variables
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	// Get database connection
 	dbconn := utils.GetConnection()
-	// services.SetDB(dbconn)
 
+	// Initialize repositories
 	athleteRepo := repositories.NewAthleteRepository(dbconn)
-	feedRepo := repositories.NewFeedRepository(dbconn)
-	styleRepo := repositories.NewStyleRepository(dbconn)
-	boutRepo := repositories.NewBoutRepository(dbconn)
 	outcomeRepo := repositories.NewOutcomeRepository(dbconn)
+	boutRepo := repositories.NewBoutRepository(dbconn)
 	athleteScoreRepo := repositories.NewAthleteScoreRepository(dbconn)
+	feedRepo := repositories.NewFeedRepository(dbconn)
+	gymRepo := repositories.NewGymRepository(dbconn)
+	styleRepo := repositories.NewStyleRepository(dbconn)
 
-	services.SetAthleteRepo(athleteRepo)
-	services.SetFeedRepo(feedRepo)
-	services.SetStyleRepo(styleRepo)
-	services.SetBoutRepo(boutRepo)
-	services.SetOutcomeRepo(outcomeRepo)
-	services.SetAthleteScoreRepo(athleteScoreRepo)
+	// Initialize services
+	athleteScoreService := services.NewAthleteScoreService(athleteScoreRepo)
+	var athleteService interfaces.AthleteService = services.NewAthleteService(athleteRepo)
+	var outcomeService interfaces.OutcomeService = services.NewOutcomeService(outcomeRepo, athleteScoreService, boutRepo)
+	boutService := services.NewBoutService(boutRepo)
+	feedService := services.NewFeedService(feedRepo)
+	gymService := services.NewGymService(gymRepo)
+	styleService := services.NewStyleService(styleRepo, athleteScoreService)
 
-	athleteScoreService := services.NewAthleteScoreService()
-	outcomeService := services.NewOutcomeService(athleteScoreService, boutRepo)
+	// Initialize handlers
+	athleteHandler := services.NewAthleteHandler(athleteService)
+	outcomeHandler := services.NewOutcomeHandler(outcomeService)
+	athleteScoreHandler := services.NewAthleteScoreHandler(athleteScoreService)
+	boutHandler := services.NewBoutHandler(boutService)
+	feedHandler := services.NewFeedHandler(feedService)
+	gymHandler := services.NewGymHandler(gymService)
+	styleHandler := services.NewStyleHandler(styleService)
 
-	router.SetOutcomeService(outcomeService)
+	// Set handlers in router package
+	router.SetAthleteHandler(athleteHandler)
+	router.SetOutcomeHandler(outcomeHandler)
+	router.SetAthleteScoreHandler(athleteScoreHandler)
+	router.SetBoutHandler(boutHandler)
+	router.SetFeedHandler(feedHandler)
+	router.SetGymHandler(gymHandler)
+	router.SetStyleHandler(styleHandler)
 
-	var appRouter = router.CreateRouter()
+	// Create router with all routes configured
+	r := router.CreateRouter()
 
-	log.Println("listening on Port 8000")
-	log.Fatal(http.ListenAndServe(":8000", appRouter))
+	// Start server
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8000"
+	}
+
+	log.Printf("Server starting on port %s...", port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%s", port), r))
 }
