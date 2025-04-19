@@ -62,32 +62,193 @@ VALUES
 (9, 1), -- Michael Anderson does Muay Thai
 (10, 3); -- Lisa Thomas does Boxing
 
--- Insert bouts
+-- Insert initial athlete scores (will be updated through bout history)
+INSERT INTO athlete_score (athlete_id, style_id, score)
+VALUES 
+(1, 2, 400), -- John Smith BJJ
+(2, 2, 400), -- John Doe BJJ
+(1, 1, 400), -- John Smith Muay Thai
+(3, 1, 400), -- Mike Johnson Muay Thai
+(4, 3, 400), -- Sarah Williams Boxing
+(5, 2, 400), -- David Brown BJJ
+(6, 1, 400), -- Emily Davis Muay Thai
+(7, 3, 400), -- Robert Wilson Boxing
+(8, 2, 400), -- Jessica Taylor BJJ
+(9, 1, 400), -- Michael Anderson Muay Thai
+(10, 3, 400); -- Lisa Thomas Boxing
+
+-- Insert historical bouts for John Smith (ID: 1)
+-- Note: Previous bouts showed John Smith does BJJ (style_id: 2) and Muay Thai (style_id: 1)
 INSERT INTO bout (challenger_id, acceptor_id, referee_id, style_id, accepted, completed, cancelled, points)
 VALUES 
-(1, 2, 3, 2, true, false, false, 0), -- John Smith vs John Doe in BJJ
-(4, 5, 6, 3, true, false, false, 0), -- Sarah Williams vs David Brown in Boxing
-(7, 8, 9, 2, true, false, false, 0); -- Robert Wilson vs Jessica Taylor in BJJ
+-- Earlier BJJ matches (showing progression)
+(1, 2, 3, 2, true, true, false, 15),  -- vs John Doe (ID: 2)
+(5, 1, 3, 2, true, true, false, 18),  -- vs David Brown (ID: 5)
+(1, 8, 3, 2, true, true, false, 20),  -- vs Jessica Taylor (ID: 8)
+(2, 1, 5, 2, true, true, false, 22),  -- vs John Doe rematch
+(1, 5, 8, 2, true, true, false, 25),  -- vs David Brown rematch
+(8, 1, 2, 2, true, true, false, 18),  -- vs Jessica Taylor rematch
+(1, 2, 5, 2, true, true, false, 20),  -- vs John Doe final match
 
--- Insert athlete scores
-INSERT INTO athlete_score (athlete_id, style_id, score)
-SELECT athlete_id, style_id, 400
-FROM athlete_style;
+-- Historical Muay Thai matches (Style ID: 1)
+(3, 1, 9, 1, true, true, false, 15),  -- vs Mike Johnson (ID: 3)
+(1, 6, 3, 1, true, true, false, 18),  -- vs Emily Davis (ID: 6)
+(9, 1, 6, 1, true, true, false, 20),  -- vs Michael Anderson (ID: 9)
+(1, 3, 9, 1, true, true, false, 22),  -- vs Mike Johnson rematch
+(6, 1, 3, 1, true, true, false, 25),  -- vs Emily Davis rematch
+(1, 9, 6, 1, true, true, false, 18),  -- vs Michael Anderson rematch
+(3, 1, 9, 1, true, true, false, 20),  -- vs Mike Johnson final
+(1, 6, 3, 1, true, true, false, 22);  -- vs Emily Davis final
 
--- Insert following relationships
-INSERT INTO following (follower_id, followed_id)
+-- Insert outcomes for historical bouts
+INSERT INTO outcome (bout_id, winner_id, loser_id, style_id, is_draw)
 VALUES 
-(3, 1), -- Mike Johnson follows John Smith
-(4, 1), -- Sarah Williams follows John Smith
-(5, 1), -- David Brown follows John Smith
-(1, 3), -- John Smith follows Mike Johnson
-(1, 4), -- John Smith follows Sarah Williams
-(1, 5), -- John Smith follows David Brown
-(6, 1), -- Emily Davis follows John Smith
-(7, 1), -- Robert Wilson follows John Smith
-(8, 1), -- Jessica Taylor follows John Smith
-(1, 6), -- John Smith follows Emily Davis
-(1, 7), -- John Smith follows Robert Wilson
-(1, 8); -- John Smith follows Jessica Taylor
+-- BJJ Outcomes (John wins 4, loses 3)
+(1, 1, 2, 2, false),    -- Win vs John Doe
+(2, 5, 1, 2, false),    -- Loss vs David Brown
+(3, 1, 8, 2, false),    -- Win vs Jessica Taylor
+(4, 1, 2, 2, false),    -- Win vs John Doe rematch
+(5, 5, 1, 2, false),    -- Loss vs David Brown rematch
+(6, 8, 1, 2, false),    -- Loss vs Jessica Taylor rematch
+(7, 1, 2, 2, false),   -- Win vs John Doe final
+
+-- Muay Thai Outcomes (John wins 5, loses 3)
+(8, 3, 1, 1, false),   -- Loss vs Mike Johnson
+(9, 1, 6, 1, false),   -- Win vs Emily Davis
+(10, 9, 1, 1, false),   -- Loss vs Michael Anderson
+(11, 1, 3, 1, false),   -- Win vs Mike Johnson rematch
+(12, 1, 6, 1, false),   -- Win vs Emily Davis rematch
+(13, 1, 9, 1, false),   -- Win vs Michael Anderson rematch
+(14, 3, 1, 1, false),   -- Loss vs Mike Johnson final
+(15, 1, 6, 1, false);   -- Win vs Emily Davis final
+
+-- Update athlete records for historical bouts
+-- John Smith: +9 wins, +6 losses
+UPDATE athlete_record 
+SET wins = wins + 9, losses = losses + 6 
+WHERE athlete_id = 1;
+
+-- Update other athletes' records from historical bouts
+UPDATE athlete_record SET wins = wins + 2, losses = losses + 2 WHERE athlete_id = 2;  -- John Doe
+UPDATE athlete_record SET wins = wins + 2, losses = losses + 1 WHERE athlete_id = 3;  -- Mike Johnson
+UPDATE athlete_record SET wins = wins + 2, losses = losses + 1 WHERE athlete_id = 5;  -- David Brown
+UPDATE athlete_record SET wins = wins + 0, losses = losses + 3 WHERE athlete_id = 6;  -- Emily Davis
+UPDATE athlete_record SET wins = wins + 1, losses = losses + 2 WHERE athlete_id = 8;  -- Jessica Taylor
+UPDATE athlete_record SET wins = wins + 1, losses = losses + 1 WHERE athlete_id = 9;  -- Michael Anderson
+
+-- Insert historical score progression
+INSERT INTO athlete_score_history (athlete_id, style_id, outcome_id, previous_score, new_score)
+VALUES
+-- BJJ progression
+(1, 2, 1, 400, 415),    -- First win vs John Doe
+(1, 2, 2, 415, 405),    -- Loss vs David Brown
+(1, 2, 3, 405, 425),    -- Win vs Jessica Taylor
+(1, 2, 4, 425, 447),    -- Win vs John Doe rematch
+(1, 2, 5, 447, 435),    -- Loss vs David Brown rematch
+(1, 2, 6, 435, 425),    -- Loss vs Jessica Taylor rematch
+(1, 2, 7, 425, 445),    -- Win vs John Doe final
+
+-- Muay Thai progression
+(1, 1, 8, 400, 390),    -- Loss vs Mike Johnson
+(1, 1, 9, 390, 408),    -- Win vs Emily Davis
+(1, 1, 10, 408, 398),   -- Loss vs Michael Anderson
+(1, 1, 11, 398, 420),   -- Win vs Mike Johnson rematch
+(1, 1, 12, 420, 445),   -- Win vs Emily Davis rematch
+(1, 1, 13, 445, 463),   -- Win vs Michael Anderson rematch
+(1, 1, 14, 463, 453),   -- Loss vs Mike Johnson final
+(1, 1, 15, 453, 475);   -- Win vs Emily Davis final
+
+-- Update scores after historical matches
+UPDATE athlete_score SET score = 445 WHERE athlete_id = 1 AND style_id = 2;  -- John Smith BJJ
+UPDATE athlete_score SET score = 475 WHERE athlete_id = 1 AND style_id = 1;  -- John Smith Muay Thai
+UPDATE athlete_score SET score = 435 WHERE athlete_id = 2 AND style_id = 2;  -- John Doe BJJ
+UPDATE athlete_score SET score = 445 WHERE athlete_id = 3 AND style_id = 1;  -- Mike Johnson Muay Thai
+UPDATE athlete_score SET score = 450 WHERE athlete_id = 5 AND style_id = 2;  -- David Brown BJJ
+UPDATE athlete_score SET score = 380 WHERE athlete_id = 6 AND style_id = 1;  -- Emily Davis Muay Thai
+UPDATE athlete_score SET score = 420 WHERE athlete_id = 8 AND style_id = 2;  -- Jessica Taylor BJJ
+UPDATE athlete_score SET score = 425 WHERE athlete_id = 9 AND style_id = 1;  -- Michael Anderson Muay Thai
+
+-- Insert pending bouts (John Smith as referee)
+INSERT INTO bout (challenger_id, acceptor_id, referee_id, style_id, accepted, completed, cancelled, points)
+VALUES 
+(2, 5, 1, 2, false, false, false, 25),  -- John Doe vs David Brown in BJJ (pending referee approval)
+(3, 6, 1, 1, false, false, false, 20),  -- Mike Johnson vs Emily Davis in Muay Thai (pending referee approval)
+(8, 5, 1, 2, false, false, false, 30);  -- Jessica Taylor vs David Brown in BJJ (pending referee approval)
+
+-- Insert incomplete bouts (John Smith as acceptor)
+INSERT INTO bout (challenger_id, acceptor_id, referee_id, style_id, accepted, completed, cancelled, points)
+VALUES 
+(2, 1, 3, 2, true, false, false, 25),   -- John Doe challenging John Smith in BJJ (accepted, not completed)
+(6, 1, 9, 1, true, false, false, 20),   -- Emily Davis challenging John Smith in Muay Thai (accepted, not completed)
+(9, 1, 3, 1, false, false, false, 30);  -- Michael Anderson challenging John Smith in Muay Thai (not accepted yet)
+
+-- Insert completed bouts
+INSERT INTO bout (challenger_id, acceptor_id, referee_id, style_id, accepted, completed, cancelled, points)
+VALUES 
+(1, 3, 9, 1, true, true, false, 20), -- John Smith vs Mike Johnson in Muay Thai (completed)
+(8, 5, 10, 2, true, true, false, 15), -- Jessica Taylor vs David Brown in BJJ (completed)
+(4, 7, 2, 3, true, true, false, 25), -- Sarah Williams vs Robert Wilson in Boxing (completed)
+(6, 9, 1, 1, true, true, false, 18), -- Emily Davis vs Michael Anderson in Muay Thai (completed)
+(10, 4, 3, 3, true, true, false, 22); -- Lisa Thomas vs Sarah Williams in Boxing (completed)
+
+-- Insert outcomes for completed bouts
+INSERT INTO outcome (bout_id, winner_id, loser_id, style_id, is_draw)
+VALUES 
+(16, 1, 3, 1, false), -- John Smith beat Mike Johnson in Muay Thai
+(17, 5, 8, 2, false), -- David Brown beat Jessica Taylor in BJJ
+(18, 7, 4, 3, false), -- Robert Wilson beat Sarah Williams in Boxing
+(19, 9, 6, 1, false), -- Michael Anderson beat Emily Davis in Muay Thai
+(20, 4, 10, 3, false); -- Sarah Williams beat Lisa Thomas in Boxing
+
+-- Update athlete records for winners and losers
+-- John Smith wins +1
+UPDATE athlete_record SET wins = wins + 1 WHERE athlete_id = 1;
+-- Mike Johnson losses +1
+UPDATE athlete_record SET losses = losses + 1 WHERE athlete_id = 3;
+-- David Brown wins +1
+UPDATE athlete_record SET wins = wins + 1 WHERE athlete_id = 5;
+-- Jessica Taylor losses +1
+UPDATE athlete_record SET losses = losses + 1 WHERE athlete_id = 8;
+-- Robert Wilson wins +1
+UPDATE athlete_record SET wins = wins + 1 WHERE athlete_id = 7;
+-- Sarah Williams losses +1 (first match)
+UPDATE athlete_record SET losses = losses + 1 WHERE athlete_id = 4;
+-- Michael Anderson wins +1
+UPDATE athlete_record SET wins = wins + 1 WHERE athlete_id = 9;
+-- Emily Davis losses +1
+UPDATE athlete_record SET losses = losses + 1 WHERE athlete_id = 6;
+-- Sarah Williams wins +1 (second match)
+UPDATE athlete_record SET wins = wins + 1 WHERE athlete_id = 4;
+-- Lisa Thomas losses +1
+UPDATE athlete_record SET losses = losses + 1 WHERE athlete_id = 10;
+
+-- Update athlete scores for winners (gained points)
+-- John Smith + 20 in Muay Thai
+UPDATE athlete_score SET score = score + 20 WHERE athlete_id = 1 AND style_id = 1;
+-- David Brown + 15 in BJJ
+UPDATE athlete_score SET score = score + 15 WHERE athlete_id = 5 AND style_id = 2;
+-- Robert Wilson + 25 in Boxing
+UPDATE athlete_score SET score = score + 25 WHERE athlete_id = 7 AND style_id = 3;
+-- Michael Anderson + 18 in Muay Thai
+UPDATE athlete_score SET score = score + 18 WHERE athlete_id = 9 AND style_id = 1;
+-- Sarah Williams + 22 in Boxing
+UPDATE athlete_score SET score = score + 22 WHERE athlete_id = 4 AND style_id = 3;
+
+-- Update athlete scores for losers (lost points)
+-- Mike Johnson - a portion of points in Muay Thai
+UPDATE athlete_score SET score = score - 10 WHERE athlete_id = 3 AND style_id = 1;
+-- Jessica Taylor - a portion of points in BJJ
+UPDATE athlete_score SET score = score - 8 WHERE athlete_id = 8 AND style_id = 2;
+-- Sarah Williams - a portion of points in Boxing (first match)
+UPDATE athlete_score SET score = score - 12 WHERE athlete_id = 4 AND style_id = 3;
+-- Emily Davis - a portion of points in Muay Thai
+UPDATE athlete_score SET score = score - 9 WHERE athlete_id = 6 AND style_id = 1;
+-- Lisa Thomas - a portion of points in Boxing
+UPDATE athlete_score SET score = score - 11 WHERE athlete_id = 10 AND style_id = 3;
+
+-- Insert score history records for all score changes
+INSERT INTO athlete_score_history (athlete_id, style_id, outcome_id, previous_score, new_score)
+SELECT athlete_id, style_id, NULL, NULL, score
+FROM athlete_score;
 
 COMMIT; 

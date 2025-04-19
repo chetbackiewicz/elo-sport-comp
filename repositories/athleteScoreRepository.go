@@ -1,6 +1,7 @@
 package repositories
 
 import (
+	"database/sql"
 	"ronin/models"
 
 	"github.com/jmoiron/sqlx"
@@ -110,21 +111,83 @@ func (repo *AthleteScoreRepository) GetAthleteScoreByStyle(id int, style int) (m
 }
 
 func (repo *AthleteScoreRepository) UpdateAthleteScore(score int, athleteId int, styleId int, outcomeId int) error {
-	sqlStmt := `INSERT INTO athlete_score (score, athlete_id, style_id, outcome_id) VALUES ($1, $2, $3, $4)`
-	_, err := repo.DB.Exec(sqlStmt, score, athleteId, styleId, outcomeId)
+	// Start transaction
+	tx, err := repo.DB.Beginx()
 	if err != nil {
 		return err
 	}
 
-	return nil
+	// Get previous score
+	var previousScore int
+	err = tx.QueryRow(`SELECT score FROM athlete_score WHERE athlete_id = $1 AND style_id = $2 ORDER BY updated_dt DESC LIMIT 1`,
+		athleteId, styleId).Scan(&previousScore)
+	if err != nil && err != sql.ErrNoRows {
+		tx.Rollback()
+		return err
+	}
+
+	// Insert into history
+	_, err = tx.Exec(`INSERT INTO athlete_score_history (athlete_id, style_id, outcome_id, previous_score, new_score) 
+		VALUES ($1, $2, $3, $4, $5)`, athleteId, styleId, outcomeId, previousScore, score)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Update current score
+	_, err = tx.Exec(`INSERT INTO athlete_score (score, athlete_id, style_id, outcome_id) VALUES ($1, $2, $3, $4)`,
+		score, athleteId, styleId, outcomeId)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
 }
 
 func (repo *AthleteScoreRepository) CreateAthleteScoreUponRegistration(athleteId int, styleId int) error {
-	sqlStmt := `INSERT INTO athlete_score (athlete_id, style_id, score) VALUES ($1, $2, $3)`
-	_, err := repo.DB.Exec(sqlStmt, athleteId, styleId, 400)
+	tx, err := repo.DB.Beginx()
 	if err != nil {
 		return err
 	}
 
-	return nil
+	// Insert initial score
+	_, err = tx.Exec(`INSERT INTO athlete_score (athlete_id, style_id, score) VALUES ($1, $2, $3)`,
+		athleteId, styleId, 400)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	// Record in history
+	_, err = tx.Exec(`INSERT INTO athlete_score_history (athlete_id, style_id, previous_score, new_score) 
+		VALUES ($1, $2, NULL, $3)`, athleteId, styleId, 400)
+	if err != nil {
+		tx.Rollback()
+		return err
+	}
+
+	return tx.Commit()
+}
+
+func (repo *AthleteScoreRepository) GetAthleteScoreHistory(athleteId int, styleId int) ([]models.AthleteScoreHistory, error) {
+	var history []models.AthleteScoreHistory
+	sqlStmt := `SELECT 
+		history_id,
+		athlete_id,
+		style_id,
+		outcome_id,
+		previous_score,
+		new_score,
+		created_dt,
+		updated_dt
+	FROM athlete_score_history 
+	WHERE athlete_id = $1 AND style_id = $2 
+	ORDER BY created_dt ASC`
+
+	err := repo.DB.Select(&history, sqlStmt, athleteId, styleId)
+	if err != nil {
+		return nil, err
+	}
+	return history, nil
 }

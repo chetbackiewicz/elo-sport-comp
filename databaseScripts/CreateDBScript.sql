@@ -105,6 +105,20 @@ CREATE TABLE athlete_score (
     CONSTRAINT FK_style_id FOREIGN KEY (style_id) REFERENCES style(style_id)
 );
 
+CREATE TABLE athlete_score_history (
+    history_id serial PRIMARY KEY,
+    athlete_id int NOT NULL,
+    style_id int NOT NULL,
+    outcome_id int,
+    previous_score int,
+    new_score int NOT NULL,
+    created_dt timestamp NOT NULL DEFAULT now(),
+    updated_dt timestamp NOT NULL DEFAULT now(),
+    CONSTRAINT FK_athlete_id FOREIGN KEY (athlete_id) REFERENCES athlete(athlete_id),
+    CONSTRAINT FK_style_id FOREIGN KEY (style_id) REFERENCES style(style_id),
+    CONSTRAINT FK_outcome_id FOREIGN KEY (outcome_id) REFERENCES outcome(outcome_id)
+);
+
 CREATE TABLE athlete_style (
 	athlete_id int,
     style_id int,
@@ -191,6 +205,11 @@ CREATE TRIGGER update_athlete_gym_updated_dt
 	
 CREATE TRIGGER update_athlete_score_updated_dt
     BEFORE UPDATE ON athlete_score
+    FOR EACH ROW
+    EXECUTE FUNCTION update_updated_dt_column();
+	
+CREATE TRIGGER update_athlete_score_history_updated_dt
+    BEFORE UPDATE ON athlete_score_history
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_dt_column();
 	
