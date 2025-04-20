@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"ronin/interfaces"
 	"ronin/models"
 	"ronin/repositories"
 
@@ -17,20 +18,13 @@ func SetGymRepo(r *repositories.GymRepository) {
 	gymRepo = r
 }
 
-// GymService defines the interface for gym-related operations
-type GymService interface {
-	GetAll() ([]models.Gym, error)
-	GetByID(id string) (models.Gym, error)
-	Create(gym models.Gym) (models.Gym, error)
-}
-
-// gymService implements the GymService interface
+// gymService implements the interfaces.GymService interface
 type gymService struct {
 	repo *repositories.GymRepository
 }
 
 // NewGymService creates a new instance of GymService
-func NewGymService(repo *repositories.GymRepository) GymService {
+func NewGymService(repo *repositories.GymRepository) interfaces.GymService {
 	return &gymService{
 		repo: repo,
 	}
@@ -81,11 +75,11 @@ func (s *gymService) validateGym(gym models.Gym) error {
 
 // GymHandler handles HTTP requests for gym operations
 type GymHandler struct {
-	service GymService
+	service interfaces.GymService
 }
 
 // NewGymHandler creates a new instance of GymHandler
-func NewGymHandler(service GymService) *GymHandler {
+func NewGymHandler(service interfaces.GymService) *GymHandler {
 	return &GymHandler{
 		service: service,
 	}

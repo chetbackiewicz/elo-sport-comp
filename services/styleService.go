@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"ronin/interfaces"
 	"ronin/models"
 	"ronin/repositories"
 	"strconv"
@@ -17,23 +18,14 @@ func SetStyleRepo(r *repositories.StyleRepository) {
 	styleRepo = r
 }
 
-// StyleService defines the interface for style-related operations
-type StyleService interface {
-	GetAll() ([]models.Style, error)
-	Create(style models.Style) error
-	RegisterAthleteToStyle(athleteID int, styleID int) error
-	RegisterMultipleStylesToAthlete(athleteID int, styles []int) error
-	GetCommonStyles(acceptorID, challengerID string) ([]models.Style, error)
-}
-
-// styleService implements the StyleService interface
+// styleService implements the interfaces.StyleService interface
 type styleService struct {
 	repo                *repositories.StyleRepository
 	athleteScoreService *AthleteScoreService
 }
 
 // NewStyleService creates a new instance of StyleService
-func NewStyleService(repo *repositories.StyleRepository, athleteScoreService *AthleteScoreService) StyleService {
+func NewStyleService(repo *repositories.StyleRepository, athleteScoreService *AthleteScoreService) interfaces.StyleService {
 	return &styleService{
 		repo:                repo,
 		athleteScoreService: athleteScoreService,
@@ -107,11 +99,11 @@ func (s *styleService) validateStyle(style models.Style) error {
 
 // StyleHandler handles HTTP requests for style operations
 type StyleHandler struct {
-	service StyleService
+	service interfaces.StyleService
 }
 
 // NewStyleHandler creates a new instance of StyleHandler
-func NewStyleHandler(service StyleService) *StyleHandler {
+func NewStyleHandler(service interfaces.StyleService) *StyleHandler {
 	return &StyleHandler{
 		service: service,
 	}

@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"ronin/interfaces"
 	"ronin/models"
 	"ronin/repositories"
 
@@ -16,13 +17,13 @@ type FeedService interface {
 	GetByAthleteID(athleteID string) ([]models.Feed, error)
 }
 
-// feedService implements the FeedService interface
+// feedService implements the interfaces.FeedService interface
 type feedService struct {
 	repo *repositories.FeedRepository
 }
 
 // NewFeedService creates a new instance of FeedService
-func NewFeedService(repo *repositories.FeedRepository) FeedService {
+func NewFeedService(repo *repositories.FeedRepository) interfaces.FeedService {
 	return &feedService{
 		repo: repo,
 	}
@@ -47,11 +48,11 @@ func (s *feedService) GetByAthleteID(athleteID string) ([]models.Feed, error) {
 
 // FeedHandler handles HTTP requests for feed operations
 type FeedHandler struct {
-	service FeedService
+	service interfaces.FeedService
 }
 
 // NewFeedHandler creates a new instance of FeedHandler
-func NewFeedHandler(service FeedService) *FeedHandler {
+func NewFeedHandler(service interfaces.FeedService) *FeedHandler {
 	return &FeedHandler{
 		service: service,
 	}
