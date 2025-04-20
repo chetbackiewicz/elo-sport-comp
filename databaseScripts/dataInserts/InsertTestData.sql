@@ -173,12 +173,13 @@ VALUES
 (3, 6, 1, 1, false, false, false, 20, '2024-04-09 20:00:00'),  -- Mike Johnson vs Emily Davis in Muay Thai
 (8, 5, 1, 2, false, false, false, 30, '2024-04-10 18:30:00');  -- Jessica Taylor vs David Brown in BJJ
 
--- Insert incomplete bouts (John Smith as acceptor)
+-- Insert incomplete bouts (John Smith as referee)
 INSERT INTO bout (challenger_id, acceptor_id, referee_id, style_id, accepted, completed, cancelled, points, created_dt)
 VALUES 
 (2, 1, 3, 2, true, false, false, 25, '2024-04-08 19:30:00'),   -- John Doe challenging John Smith in BJJ
 (6, 1, 9, 1, true, false, false, 20, '2024-04-09 20:30:00'),   -- Emily Davis challenging John Smith in Muay Thai
-(9, 1, 3, 1, false, false, false, 30, '2024-04-10 19:00:00');  -- Michael Anderson challenging John Smith in Muay Thai
+(9, 1, 3, 1, false, false, false, 30, '2024-04-10 19:00:00'),  -- Michael Anderson challenging John Smith in Muay Thai
+(3, 8, 1, 2, true, false, false, 25, '2024-04-11 19:00:00');   -- Mike Johnson vs Jessica Taylor in BJJ (accepted, awaiting jsmith's decision)
 
 -- Insert completed bouts with recent dates
 INSERT INTO bout (challenger_id, acceptor_id, referee_id, style_id, accepted, completed, cancelled, points, created_dt)
@@ -197,6 +198,9 @@ VALUES
 (18, 7, 4, 3, false, '2024-04-08 22:30:00'), -- Robert Wilson beat Sarah Williams in Boxing
 (19, 9, 6, 1, false, '2024-04-09 20:45:00'), -- Michael Anderson beat Emily Davis in Muay Thai
 (20, 4, 10, 3, false, '2024-04-10 21:45:00'); -- Sarah Williams beat Lisa Thomas in Boxing
+
+-- Update bout completion status
+UPDATE bout SET completed = true WHERE bout_id IN (16, 17, 18, 19, 20);
 
 -- Update athlete records for winners and losers
 UPDATE athlete_record SET wins = wins + 1 WHERE athlete_id = 1;  -- John Smith wins +1

@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"fmt"
+	"log"
 	"ronin/interfaces"
 	"ronin/models"
 	"ronin/repositories"
@@ -68,22 +69,65 @@ func (s *outcomeService) Create(outcome models.Outcome) error {
 }
 
 func (s *outcomeService) CreateForBout(outcome models.Outcome, boutID string) error {
+	log.Printf("Starting CreateForBout for bout %s with outcome: %+v", boutID, outcome)
+
 	if err := s.validateOutcome(outcome); err != nil {
+		log.Printf("Validation failed for outcome: %v", err)
 		return fmt.Errorf("invalid outcome: %w", err)
 	}
 
 	if boutID == "" {
+		log.Println("Bout ID is empty")
 		return errors.New("bout ID cannot be empty")
 	}
 
-	if err := s.createOutcomeForBout(outcome, boutID); err != nil {
-		return err
+	// Check if bout exists and is in correct state
+	bout, err := s.boutRepository.GetBoutById(boutID)
+	if err != nil {
+		log.Printf("Error getting bout %s: %v", boutID, err)
+		return fmt.Errorf("failed to get bout: %w", err)
+	}
+	log.Printf("Found bout: %+v", bout)
+
+	if !bout.Accepted {
+		log.Printf("Bout %s is not accepted", boutID)
+		return fmt.Errorf("bout %s is not accepted", boutID)
 	}
 
-	if err := s.updateAthleteScores(outcome); err != nil {
+	if bout.Completed {
+		log.Printf("Bout %s is already completed", boutID)
+		return fmt.Errorf("bout %s is already completed", boutID)
+	}
+
+	// Check if outcome already exists
+	existingOutcome, err := s.outcomeRepo.GetOutcomeByBoutId(boutID)
+	if err == nil {
+		log.Printf("Outcome already exists for bout %s: %+v", boutID, existingOutcome)
+		return fmt.Errorf("outcome already exists for bout %s", boutID)
+	}
+
+	// Create the outcome first
+	createdOutcome, err := s.outcomeRepo.CreateOutcome(outcome)
+	if err != nil {
+		log.Printf("Failed to create outcome for bout %s: %v", boutID, err)
+		return fmt.Errorf("failed to create outcome: %w", err)
+	}
+	log.Printf("Successfully created outcome with ID: %d", createdOutcome.OutcomeId)
+
+	// Now update the athlete scores with the created outcome
+	if err := s.updateAthleteScores(createdOutcome); err != nil {
+		log.Printf("Failed to update athlete scores: %v", err)
 		return fmt.Errorf("failed to update athlete scores: %w", err)
 	}
 
+	// Complete the bout
+	if err := s.boutRepository.CompleteBoutByBoutId(boutID); err != nil {
+		log.Printf("Failed to complete bout %s: %v", boutID, err)
+		return fmt.Errorf("failed to complete bout: %w", err)
+	}
+	log.Printf("Successfully completed bout %s", boutID)
+
+	log.Printf("Successfully created outcome for bout %s", boutID)
 	return nil
 }
 

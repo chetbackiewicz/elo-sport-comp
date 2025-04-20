@@ -212,27 +212,18 @@ func (repo *BoutRepository) GetPendingBoutsByAthleteId(id string) ([]models.Outb
 
 func (repo *BoutRepository) GetIncompleteBoutsByAthleteId(athleteId string) ([]models.OutboundBout, error) {
 	var bouts []models.OutboundBout
-	sqlStmt := `WITH latest_scores AS (
-		SELECT 
-			athlete_id, 
-			style_id, 
-			score, 
-			updated_dt,
-			ROW_NUMBER() OVER (PARTITION BY athlete_id, style_id ORDER BY updated_dt DESC) as row_num
-		FROM athlete_score
-	)
-	SELECT 
+	sqlStmt := `SELECT 
 		b.bout_id AS "boutId",
 		b.challenger_id AS "challengerId",
 		c.first_name AS "challengerFirstName",
 		c.last_name AS "challengerLastName",
 		s.style_name AS "style",
 		s.style_id AS "styleId",
-		cs.score AS "challengerScore",
+		COALESCE(cs.score, 0) AS "challengerScore",
 		b.acceptor_id AS "acceptorId",
 		a.first_name AS "acceptorFirstName",
 		a.last_name AS "acceptorLastName",
-		ascore.score AS "acceptorScore",
+		COALESCE(ascore.score, 0) AS "acceptorScore",
 		r.athlete_id AS "refereeId",
 		r.first_name AS "refereeFirstName",
 		r.last_name AS "refereeLastName"
@@ -242,16 +233,19 @@ func (repo *BoutRepository) GetIncompleteBoutsByAthleteId(athleteId string) ([]m
 		athlete c ON b.challenger_id = c.athlete_id
 	JOIN 
 		athlete a ON b.acceptor_id = a.athlete_id
-	JOIN 
-		latest_scores cs ON b.challenger_id = cs.athlete_id AND b.style_id = cs.style_id AND cs.row_num = 1
-	JOIN 
-		latest_scores ascore ON b.acceptor_id = ascore.athlete_id AND b.style_id = ascore.style_id AND ascore.row_num = 1
+	LEFT JOIN 
+		athlete_score cs ON b.challenger_id = cs.athlete_id AND b.style_id = cs.style_id
+	LEFT JOIN 
+		athlete_score ascore ON b.acceptor_id = ascore.athlete_id AND b.style_id = ascore.style_id
 	JOIN 
 		athlete r ON b.referee_id = r.athlete_id
 	JOIN 
 		style s ON b.style_id = s.style_id
 	WHERE 
-		b.accepted = true AND b.cancelled = false AND b.completed = false AND (b.challenger_id = $1 OR b.acceptor_id = $1 OR b.referee_id = $1)`
+		b.accepted = true 
+		AND b.cancelled = false 
+		AND b.completed = false 
+		AND (b.challenger_id = $1 OR b.acceptor_id = $1 OR b.referee_id = $1)`
 
 	rows, err := repo.DB.Queryx(sqlStmt, athleteId)
 	if err != nil {

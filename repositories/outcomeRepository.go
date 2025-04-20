@@ -96,3 +96,13 @@ func (repo *OutcomeRepository) CreateOutcomeByBoutIdDraw(outcome *models.Outcome
 	}
 	return nil
 }
+
+func (repo *OutcomeRepository) GetOutcomeByBoutId(boutId string) (models.Outcome, error) {
+	var outcome models.Outcome
+	sqlStmt := `SELECT * FROM outcome WHERE bout_id = $1`
+	err := repo.DB.QueryRowx(sqlStmt, boutId).StructScan(&outcome)
+	if err != nil {
+		return models.Outcome{}, err
+	}
+	return outcome, nil
+}
