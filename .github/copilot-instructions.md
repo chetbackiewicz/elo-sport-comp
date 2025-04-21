@@ -24,7 +24,6 @@ elo-sport-comp/
 
 3. **API Design**
    - All endpoints under `/api/v1` with RESTful naming
-   - Standard response format: `{"data": {}, "message": ""}` or `{"error": "", "status": 400}`
    - Use appropriate HTTP methods (GET, POST, PUT, DELETE)
    - Implement pagination for list endpoints
 
