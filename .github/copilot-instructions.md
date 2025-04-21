@@ -40,32 +40,14 @@ elo-sport-comp/
    - Implement proper authentication/authorization
    - Never log sensitive data
 
-6. **Testing**
-   - Write unit tests alongside source code
-   - Use table-driven tests
-   - Mock interfaces for testing
-   - Test both success and error cases
-
-7. **Error Handling**
+6. **Error Handling**
    - Return descriptive error messages
    - Log errors with context
    - Use appropriate HTTP status codes
    - Implement proper error wrapping
 
-8. **Configuration**
+7. **Configuration**
    - Use `.env` for environment variables
    - Never commit sensitive data
    - Implement proper validation
    - Use secure credential management
-
-9. **Performance**
-   - Implement caching where appropriate
-   - Use connection pooling
-   - Optimize database queries
-   - Add proper indexes
-
-10. **Documentation**
-    - Document all interfaces
-    - Include package-level documentation
-    - Explain complex business logic
-    - Keep API documentation updated
