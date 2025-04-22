@@ -169,3 +169,51 @@ func (repo *AthleteScoreRepository) CreateAthleteScoreUponRegistration(athleteId
 
 	return tx.Commit()
 }
+
+func (repo *AthleteScoreRepository) GetAthleteScoreHistoryByStyle(athleteId int, styleId int) (*models.AthleteStyleScoreHistory, error) {
+	// First get the style name
+	var styleName string
+	err := repo.DB.QueryRow(`SELECT style_name FROM style WHERE style_id = $1`, styleId).Scan(&styleName)
+	if err != nil {
+		return nil, err
+	}
+
+	// Fetch the score history for the athlete and style
+	var scoreHistory []models.ScoreHistoryEntry
+	sqlStmt := `SELECT created_dt, new_score
+		FROM athlete_score_history
+		WHERE athlete_id = $1 AND style_id = $2
+		ORDER BY created_dt ASC`
+	
+	rows, err := repo.DB.Queryx(sqlStmt, athleteId, styleId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var entry models.ScoreHistoryEntry
+		if err := rows.StructScan(&entry); err != nil {
+			return nil, err
+		}
+		scoreHistory = append(scoreHistory, entry)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// If no history found, return nil
+	if len(scoreHistory) == 0 {
+		return nil, sql.ErrNoRows
+	}
+
+	// Build the response
+	response := &models.AthleteStyleScoreHistory{
+		StyleId:   styleId,
+		StyleName: styleName,
+		History:   scoreHistory,
+	}
+
+	return response, nil
+}
