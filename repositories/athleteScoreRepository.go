@@ -169,3 +169,31 @@ func (repo *AthleteScoreRepository) CreateAthleteScoreUponRegistration(athleteId
 
 	return tx.Commit()
 }
+
+func (repo *AthleteScoreRepository) GetAthleteScoreHistoryByStyle(athleteId, styleId int) (models.AthleteScoreHistory, error) {
+	var history models.AthleteScoreHistory
+	var entries []models.ScoreHistoryEntry
+
+	// Get the style name
+	styleQuery := `SELECT style_id, style_name FROM style WHERE style_id = $1`
+	err := repo.DB.QueryRowx(styleQuery, styleId).StructScan(&history)
+	if err != nil {
+		return models.AthleteScoreHistory{}, err
+	}
+
+	// Get the score history
+	historyQuery := `
+		SELECT created_dt, new_score
+		FROM athlete_score_history
+		WHERE athlete_id = $1 AND style_id = $2
+		ORDER BY created_dt ASC
+	`
+
+	err = repo.DB.Select(&entries, historyQuery, athleteId, styleId)
+	if err != nil {
+		return models.AthleteScoreHistory{}, err
+	}
+
+	history.History = entries
+	return history, nil
+}

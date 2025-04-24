@@ -36,6 +36,14 @@ func (s *AthleteScoreService) GetAthleteScoreByStyle(athleteId, styleId int) (mo
 	return score, nil
 }
 
+func (s *AthleteScoreService) GetAthleteScoreHistoryByStyle(athleteId, styleId int) (models.AthleteScoreHistory, error) {
+	history, err := s.repo.GetAthleteScoreHistoryByStyle(athleteId, styleId)
+	if err != nil {
+		return models.AthleteScoreHistory{}, err
+	}
+	return history, nil
+}
+
 func (s *AthleteScoreService) CreateAthleteScoreUponRegistration(athleteId, styleId int) error {
 	return s.repo.CreateAthleteScoreUponRegistration(athleteId, styleId)
 }
