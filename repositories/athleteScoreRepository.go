@@ -169,3 +169,40 @@ func (repo *AthleteScoreRepository) CreateAthleteScoreUponRegistration(athleteId
 
 	return tx.Commit()
 }
+
+func (repo *AthleteScoreRepository) GetAthleteScoreHistory(athleteId int, styleId int) (models.AthleteScoreHistoryResponse, error) {
+	var response models.AthleteScoreHistoryResponse
+	var history []models.AthleteScoreHistoryEntry
+
+	// Get style name and historical scores in one query
+	sqlStmt := `SELECT 
+		s.style_name,
+		ash.created_dt,
+		ash.new_score
+	FROM athlete_score_history ash
+	JOIN style s ON s.style_id = ash.style_id
+	WHERE ash.athlete_id = $1 AND ash.style_id = $2
+	ORDER BY ash.created_dt ASC`
+
+	rows, err := repo.DB.Query(sqlStmt, athleteId, styleId)
+	if err != nil {
+		return models.AthleteScoreHistoryResponse{}, err
+	}
+	defer rows.Close()
+
+	var styleName string
+	for rows.Next() {
+		var entry models.AthleteScoreHistoryEntry
+		err = rows.Scan(&styleName, &entry.Date, &entry.Score)
+		if err != nil {
+			return models.AthleteScoreHistoryResponse{}, err
+		}
+		history = append(history, entry)
+	}
+
+	response.StyleId = styleId
+	response.StyleName = styleName
+	response.History = history
+
+	return response, nil
+}

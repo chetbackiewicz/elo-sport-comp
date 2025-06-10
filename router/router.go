@@ -132,6 +132,7 @@ func CreateRouter() *mux.Router {
 	router.HandleFunc(base_url+"/score/{athlete_id}", athleteScoreHandler.GetAthleteScore).Methods("GET")
 	router.HandleFunc(base_url+"/score/{athlete_id}/all", athleteScoreHandler.GetAthleteScore).Methods("GET")
 	router.HandleFunc(base_url+"/score/{athlete_id}/style/{style_id}", athleteScoreHandler.GetAthleteScoreByStyle).Methods("GET")
+	router.HandleFunc(base_url+"/score/{athlete_id}/style/{style_id}/history", athleteScoreHandler.GetAthleteScoreHistory).Methods("GET")
 
 	// Feed routes
 	router.HandleFunc(base_url+"/feed/{athlete_id}", feedHandler.GetFeedByAthleteID).Methods("GET")
