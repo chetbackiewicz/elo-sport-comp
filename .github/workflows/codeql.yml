@@ -51,15 +51,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-go-
 
-      - name: Build Go project (manual mode)
-        if: matrix.build-mode == 'manual'
-        shell: bash
-        run: |
-          echo "Building Go project..."
-          go version
-          go mod tidy
-          go build ./...
-
       # Initializes the CodeQL tools for scanning
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v3
@@ -67,6 +58,15 @@ jobs:
           languages: ${{ matrix.language }}
           build-mode: ${{ matrix.build-mode }}
           queries: security-and-quality
+
+      - name: Build Go project (manual mode)
+        if: matrix.build-mode == 'manual'
+        shell: bash
+        run: |
+          echo "Building Go project..."
+          go version
+          go mod tidy
+          go build -v -o main .
 
       # Run CodeQL analysis
       - name: Perform CodeQL Analysis
