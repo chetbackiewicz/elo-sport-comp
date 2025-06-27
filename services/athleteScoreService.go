@@ -74,3 +74,27 @@ func (s *AthleteScoreService) CalculateNewScores(winnerScore, loserScore *models
 
 	return nil
 }
+
+func (s *AthleteScoreService) GetAthleteScoreHistoryByStyle(athleteId, styleId int) (models.AthleteScoreHistoryResponse, error) {
+	history, styleName, err := s.repo.GetAthleteScoreHistoryByAthleteAndStyle(athleteId, styleId)
+	if err != nil {
+		return models.AthleteScoreHistoryResponse{}, err
+	}
+
+	// Convert to response format
+	var historyEntries []models.ScoreHistoryEntry
+	for _, entry := range history {
+		historyEntries = append(historyEntries, models.ScoreHistoryEntry{
+			Date:  entry.CreatedDate,
+			Score: entry.NewScore,
+		})
+	}
+
+	response := models.AthleteScoreHistoryResponse{
+		StyleId:   styleId,
+		StyleName: styleName,
+		History:   historyEntries,
+	}
+
+	return response, nil
+}
