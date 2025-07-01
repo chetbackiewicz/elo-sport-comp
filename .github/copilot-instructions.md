@@ -9,6 +9,11 @@ elo-sport-comp/
 └── utils/           # Shared utilities and helpers
 └── databaseScripts/ # Database setup, DDL, and data insertion for testing
 ```
+## Model Context Protocol
+- When interacting with GitHub MCP Server, the owner is chetbackiewicz
+- The repository is elo-sport-comp
+- The branch is dev
+
 ## Coding Requirements
 
 - All routes should go in the router.go file
