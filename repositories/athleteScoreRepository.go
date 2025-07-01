@@ -180,8 +180,8 @@ func (repo *AthleteScoreRepository) GetAthleteScoreHistory(athleteId, styleId in
 		return models.AthleteScoreHistory{}, err
 	}
 
-	// Get historical scores
-	sqlStmt := `SELECT new_score, created_dt 
+	// Get historical scores with formatted timestamp
+	sqlStmt := `SELECT new_score, TO_CHAR(created_dt AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"') as created_dt
 		FROM athlete_score_history 
 		WHERE athlete_id = $1 AND style_id = $2 
 		ORDER BY created_dt ASC`
