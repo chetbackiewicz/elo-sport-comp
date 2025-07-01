@@ -74,3 +74,11 @@ func (s *AthleteScoreService) CalculateNewScores(winnerScore, loserScore *models
 
 	return nil
 }
+
+func (s *AthleteScoreService) GetAthleteScoreHistory(athleteId, styleId int) (models.AthleteScoreHistory, error) {
+	history, err := s.repo.GetAthleteScoreHistory(athleteId, styleId)
+	if err != nil {
+		return models.AthleteScoreHistory{}, err
+	}
+	return history, nil
+}
