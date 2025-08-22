@@ -1,5 +1,8 @@
 # ELO Sport Competition Platform
 
+Testing pull request updates again and adding jira information
+
+
 A RESTful API for managing athlete competitions and score tracking across various martial arts styles, using the ELO rating system for fair matchmaking.
 
 ## Overview
