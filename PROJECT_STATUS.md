@@ -283,11 +283,15 @@ PORT=8000
 ### 3. Build and Run
 
 ```bash
-# Build the application
+# Build the application (creates 'ronin' binary based on module name)
+go build -v
+
+# Or specify a custom output name
 go build -o elo-sport-comp
 
 # Run the application
-./elo-sport-comp
+./ronin
+# Or if you used custom name: ./elo-sport-comp
 ```
 
 Or using `go run`:
@@ -364,7 +368,7 @@ go fmt ./...
 # Vet code
 go vet ./...
 
-# Build
+# Build (creates 'ronin' binary by default based on module name)
 go build -v
 
 # Run (requires database)
@@ -443,8 +447,8 @@ The ELO Sport Competition Platform is a **well-architected and functional REST A
 - [ ] Create database: `createdb elo_sport_comp`
 - [ ] Run schema: `psql -d elo_sport_comp -f databaseScripts/CreateDBScript.sql`
 - [ ] Create `.env` file with database credentials
-- [ ] Build: `go build -o elo-sport-comp`
-- [ ] Run: `./elo-sport-comp`
+- [ ] Build: `go build` (creates `ronin` binary)
+- [ ] Run: `./ronin`
 - [ ] Test: `curl http://localhost:8000/api/v1/athletes`
 
 ---

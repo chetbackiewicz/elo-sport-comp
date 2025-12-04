@@ -135,10 +135,14 @@ This will download all required Go packages.
 ## Step 5: Build the Application
 
 ```bash
+# Build with custom output name (recommended for clarity)
 go build -o elo-sport-comp
+
+# Or build with default name (creates 'ronin' based on module name)
+go build
 ```
 
-This creates an executable named `elo-sport-comp` (or `elo-sport-comp.exe` on Windows).
+This creates an executable named `elo-sport-comp` (or `ronin` if using default, or `elo-sport-comp.exe`/`ronin.exe` on Windows).
 
 ---
 
