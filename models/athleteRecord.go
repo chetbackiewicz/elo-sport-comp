@@ -1,10 +1,10 @@
 package models
 
 type AthleteRecord struct {
-	AthleteId int `json:"athlete_id" db:"athlete_id"`
-	Wins      int `json:"wins" db:"wins"`
-	Losses    int `json:"losses" db:"losses"`
-	Draws     int `json:"draws" db:"draws"`
+	AthleteId   int    `json:"athlete_id" db:"athlete_id"`
+	Wins        int    `json:"wins" db:"wins"`
+	Losses      int    `json:"losses" db:"losses"`
+	Draws       int    `json:"draws" db:"draws"`
 	CreatedDate string `json:"createdDate" db:"created_dt"`
 	UpdatedDate string `json:"updatedDate" db:"updated_dt"`
 }

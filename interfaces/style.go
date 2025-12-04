@@ -2,7 +2,6 @@ package interfaces
 
 import "ronin/models"
 
-
 type StyleService interface {
 	GetAll() ([]models.Style, error)
 	Create(style models.Style) error
